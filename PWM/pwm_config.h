@@ -20,8 +20,12 @@
 
 #define PWM0_CLOCK_DIV SYSCTL_PWMDIV_1
 #define PWM1_CLOCK_DIV SYSCTL_PWMDIV_16
+
 #define PWM0_DIV 1
 #define PWM1_DIV 16
+
+void PWM0_0_Init();
+void PWM0_1_Init();
 
 void PWM1_0_Init();
 void PWM1_1_Init();
