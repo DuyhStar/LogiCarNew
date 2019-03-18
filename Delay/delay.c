@@ -26,6 +26,3 @@ void delay_ns(uint32_t n)
     for(;i<n;i++)
         SysCtlDelay(SysCtlClockGet()/3000000);
 }
-
-
-
