@@ -40,6 +40,8 @@ void car_back_goto_n_black_line(uint8_t n);
 void car_forward_goto_n_black_line_inside(uint8_t n);
 void car_back_goto_n_black_line_inside(uint8_t n);
 
+void car_begin_goto_first_pos();
+
 //Ò»Ð©Í£Ö¹º¯Êý
 void car_stop_free();
 void car_stop_hurry();

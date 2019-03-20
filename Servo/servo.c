@@ -65,4 +65,19 @@ void servo_n_angle_set(uint8_t n, uint16_t angle)
     angle_last[n] = angle;
 }
 
+void hand_set_servo()
+{
+    extern uint8_t  servoUpdate;//global variables, defined in main.c
+    extern uint16_t servoVal[4];//
 
+    while(1){
+        while(!servoUpdate)
+            ;
+        servoUpdate = 0;
+
+        servo_n_angle_set(0, servoVal[0]);
+        servo_n_angle_set(1, servoVal[1]);
+        servo_n_angle_set(2, servoVal[2]);
+        servo_n_angle_set(3, servoVal[3]);
+    }
+}

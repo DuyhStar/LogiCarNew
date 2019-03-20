@@ -23,7 +23,7 @@
 
 int      turn_speed    = 45;                            //
 int      forward_speed = 40;                            //
-uint16_t servoVal[4]   = {1500,1350,680,1100};   //舵机初始化角度值
+uint16_t servoVal[4]   = {1500,1350,680,1100};          //舵机初始化角度值
 uint8_t  servoUpdate   = 0;                             //
 uint8_t  count_enter   = 0;                             //
 
@@ -38,10 +38,10 @@ int main(void)
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |  SYSCTL_XTAL_16MHZ);
 
     SysTick_Init_ms(20);                //滴答定时器
-    UART0_Init(115200);                 //调试串口
-    UART2_Init(9600);                   //与串口屏通信
-    UART3_Init(9600);                   //前7路循迹
-    UART4_Init(9600);                   //后7路循迹
+    UART0_Init(115200);                 //调试
+    UART2_Init(9600);                   //串口屏
+    UART7_Init(9600);                   //扫码  openMV
+    patrol_line_init();                 //巡线所用两个串口及一个IO口
     key1_init();                        //按键
     car_init();                         //小车所用PWM及IO
     servo_init(servoVal);               //舵机所用4路PWM
@@ -49,18 +49,6 @@ int main(void)
     //按下按键,开始工作
     system_waitKey();
     IntMasterEnable();
-    SysTickEnable();
-    while(1)
-    {
-        UARTprintf("%d%d%d%d%d%d%d%d %d%d%d%d%d%d%d%d\n",f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7]);
-        delay_ms(40);
-    }
-    system_waitKey();
-
-    while(1)
-    {
-        car_back_patrol_line_inside();
-    }
 
     //小车出发至第一条线，然后原地右转90°,行驶至第一个十字交叉点。
     car_begin_goto_first_pos();
@@ -167,7 +155,7 @@ void IntHandler_SysTick(void)
     UARTCharPut(UART4_BASE, 0x57);
 }
 
-//获得来自串口屏的信息，来手动调节舵机位置
+//获得来自串口屏的信息，来调节舵机位置
 void IntHandler_UART2(void)
 {
     uint32_t ui32Status;
@@ -197,7 +185,7 @@ void IntHandler_UART2(void)
         servoUpdate = 1;
     }
 }
-//获取前面循迹模块信息
+//获取前循迹模块信息
 void IntHandler_UART3()
 {
     uint32_t ui32Status = UARTIntStatus(UART3_BASE, true);
@@ -211,11 +199,11 @@ void IntHandler_UART3()
         {
             bit = c&0x01;
             c = c>>1;
-            f[i] = bit;
+            f[i] = !bit;//在此处取反，使黑线为1
         }
     }
 }
-//获取后面循迹模块信息
+//获取后循迹模块信息
 void IntHandler_UART4()
 {
     uint32_t ui32Status = UARTIntStatus(UART4_BASE, true);
@@ -229,9 +217,19 @@ void IntHandler_UART4()
         {
             bit = c&0x01;
             c = c>>1;
-            b[i] = bit;
+            b[i] = !bit;//在此处取反，使黑线为1
         }
     }
 }
+//获取扫码枪信息 以及 openMV信息，公用一个串口
+void IntHandler_UART7()
+{
+    uint32_t ui32Status = UARTIntStatus(UART7_BASE, true);
+    UARTIntClear(UART7_BASE, ui32Status);
 
-
+    uint8_t c = 0;
+    while(UARTCharsAvail(UART7_BASE))
+    {
+        c = UARTCharGetNonBlocking(UART7_BASE);
+    }
+}

@@ -32,4 +32,10 @@ void IntHandler_UART3();
 void UART4_Init(uint32_t Baud);
 void IntHandler_UART4();
 
+//void UART5_Init(uint32_t Baud);
+//void IntHandler_UART5();
+
+void UART7_Init(uint32_t Baud);
+void IntHandler_UART7();
+
 #endif /* UART_UART_CONFIG_H_ */

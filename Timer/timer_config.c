@@ -12,8 +12,8 @@ void SysTick_Init_ms(uint8_t ui8IntTime)
 
     SysTickIntRegister(IntHandler_SysTick);
     SysTickIntEnable();
-    //SysTickEnable();
-    SysTickDisable();
+    SysTickEnable();
+    //SysTickDisable();
     IntMasterDisable();
 }
 
