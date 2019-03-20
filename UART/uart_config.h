@@ -21,8 +21,15 @@
 #include "driverlib/interrupt.h"
 #include "utils/uartstdio.h"
 
+void UART0_Init(uint32_t Baud);
 
 void UART2_Init(uint32_t Baud);
-void IntHandler_UART2(void);
+void IntHandler_UART2();
+
+void UART3_Init(uint32_t Baud);
+void IntHandler_UART3();
+
+void UART4_Init(uint32_t Baud);
+void IntHandler_UART4();
 
 #endif /* UART_UART_CONFIG_H_ */

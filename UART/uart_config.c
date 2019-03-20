@@ -6,7 +6,18 @@
  */
 #include "uart_config.h"
 
+void UART0_Init(uint32_t Baud)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
 
+    GPIOPinConfigure(GPIO_PA0_U0RX);
+    GPIOPinConfigure(GPIO_PA1_U0TX);
+    GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+
+    UARTClockSourceSet(UART0_BASE, UART_CLOCK_PIOSC);//Clock 16MHz
+    UARTStdioConfig(0, Baud, 16000000);
+}
 void UART2_Init(uint32_t Baud)
 {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_UART2);
@@ -21,4 +32,34 @@ void UART2_Init(uint32_t Baud)
     UARTIntRegister(UART2_BASE, IntHandler_UART2);
     UARTIntEnable(UART2_BASE, UART_INT_RX | UART_INT_RT);
     IntEnable(INT_UART2);
+}
+void UART3_Init(uint32_t Baud)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART3);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+
+    GPIOPinConfigure(GPIO_PC6_U3RX);
+    GPIOPinConfigure(GPIO_PC7_U3TX);
+    GPIOPinTypeUART(GPIO_PORTC_BASE, GPIO_PIN_6 | GPIO_PIN_7);
+
+    UARTConfigSetExpClk(UART3_BASE, SysCtlClockGet(), Baud, (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE));
+
+    UARTIntRegister(UART3_BASE, IntHandler_UART3);
+    UARTIntEnable(UART3_BASE, UART_INT_RX | UART_INT_RT);
+    IntEnable(INT_UART3);
+}
+void UART4_Init(uint32_t Baud)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART4);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+
+    GPIOPinConfigure(GPIO_PC4_U4RX);
+    GPIOPinConfigure(GPIO_PC5_U4TX);
+    GPIOPinTypeUART(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5);
+
+    UARTConfigSetExpClk(UART4_BASE, SysCtlClockGet(), Baud, (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE));
+
+    UARTIntRegister(UART4_BASE, IntHandler_UART4);
+    UARTIntEnable(UART4_BASE, UART_INT_RX | UART_INT_RT);
+    IntEnable(INT_UART4);
 }

@@ -8,46 +8,33 @@
 
 void patrol_line_init()
 {
-    uint32_t A_pin = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
-    uint32_t B_pin = GPIO_PIN_4 | GPIO_PIN_5;
-    uint32_t D_pin = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
-    uint32_t E_pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4;
+    UART3_Init(9600);                   //前7路循迹
+    UART4_Init(9600);                   //后7路循迹
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
-
-    GPIODirModeSet(GPIO_PORTA_BASE, A_pin, GPIO_DIR_MODE_IN);
-    GPIODirModeSet(GPIO_PORTB_BASE, B_pin, GPIO_DIR_MODE_IN);
-    GPIODirModeSet(GPIO_PORTD_BASE, D_pin, GPIO_DIR_MODE_IN);
-    GPIODirModeSet(GPIO_PORTE_BASE, E_pin, GPIO_DIR_MODE_IN);
-
-    GPIOPadConfigSet(GPIO_PORTA_BASE, A_pin, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    GPIOPadConfigSet(GPIO_PORTB_BASE, B_pin, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    GPIOPadConfigSet(GPIO_PORTD_BASE, D_pin, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    GPIOPadConfigSet(GPIO_PORTE_BASE, E_pin, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    GPIODirModeSet(GPIO_PORTD_BASE, GPIO_PIN_3, GPIO_DIR_MODE_IN);
+    GPIOPadConfigSet(GPIO_PORTD_BASE, GPIO_PIN_3, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 }
 
 //wide为线宽,取0,1,2
 void forward_patrol_line(uint8_t wide)
 {
-    extern int forward_speed, turn_speed;
+    extern int forward_speed, turn_speed, f[8];
     int8_t left = 0, right = 0;
 
     switch(wide)
     {
     case 0:
-        left  = f2_black();
-        right = f4_black();
+        left  = f[2] || f[1] || f[0];
+        right = f[4] || f[5] || f[6];
         break;
     case 1:
-        left  = f1_black();
-        right = f5_black();
+        left  = f[1] || f[0];
+        right = f[5] || f[6];
         break;
     case 2:
-        left  = f0_black();
-        right = f6_black();
+        left  = f[0];
+        right = f[6];
         break;
     default:
         break;
@@ -66,22 +53,22 @@ void forward_patrol_line(uint8_t wide)
 
 void back_patrol_line(uint8_t wide)
 {
-    extern int forward_speed, turn_speed;
+    extern int forward_speed, turn_speed, b[8];
     int8_t left = 0, right = 0;
 
     switch(wide)
     {
     case 0:
-        left  = b2_black();
-        right = b4_black();
+        left  = b[2] || b[1] || b[0];
+        right = b[4] || b[5] || b[6];
         break;
     case 1:
-        left  = b1_black();
-        right = b5_black();
+        left  = b[1] || b[0];
+        right = b[5] || b[6];
         break;
     case 2:
-        left  = b0_black();
-        right = b6_black();
+        left  = b[0];
+        right = b[6];
         break;
     default:
         break;
@@ -97,172 +84,11 @@ void back_patrol_line(uint8_t wide)
         car_back(forward_speed);
 }
 
-int8_t f0_black()
+uint8_t m_black()
 {
-    uint32_t port = GPIO_PORTA_BASE;
-    uint32_t pin  = GPIO_PIN_2;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
+    int32_t ui32state = GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_3);
+    if( (ui32state&GPIO_PIN_3) ==  GPIO_PIN_3)
         return 1;
     else
         return 0;
 }
-int8_t f1_black()
-{
-    uint32_t port = GPIO_PORTA_BASE;
-    uint32_t pin  = GPIO_PIN_3;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t f2_black()
-{
-    uint32_t port = GPIO_PORTA_BASE;
-    uint32_t pin  = GPIO_PIN_4;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t f3_black()
-{
-    uint32_t port = GPIO_PORTA_BASE;
-    uint32_t pin  = GPIO_PIN_5;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t f4_black()
-{
-    uint32_t port = GPIO_PORTB_BASE;
-    uint32_t pin  = GPIO_PIN_4;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t f5_black()
-{
-    uint32_t port = GPIO_PORTB_BASE;
-    uint32_t pin  = GPIO_PIN_5;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t f6_black()
-{
-    uint32_t port = GPIO_PORTD_BASE;
-    uint32_t pin  = GPIO_PIN_2;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-
-int8_t m_black()
-{
-    uint32_t port = GPIO_PORTD_BASE;
-    uint32_t pin  = GPIO_PIN_3;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-
-int8_t b0_black()
-{
-    uint32_t port = GPIO_PORTE_BASE;
-    uint32_t pin  = GPIO_PIN_4;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t b1_black()
-{
-    uint32_t port = GPIO_PORTE_BASE;
-    uint32_t pin  = GPIO_PIN_3;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t b2_black()
-{
-    uint32_t port = GPIO_PORTE_BASE;
-    uint32_t pin  = GPIO_PIN_2;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t b3_black()
-{
-    uint32_t port = GPIO_PORTE_BASE;
-    uint32_t pin  = GPIO_PIN_1;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t b4_black()
-{
-    uint32_t port = GPIO_PORTE_BASE;
-    uint32_t pin  = GPIO_PIN_0;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t b5_black()
-{
-    uint32_t port = GPIO_PORTD_BASE;
-    uint32_t pin  = GPIO_PIN_5;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-int8_t b6_black()
-{
-    uint32_t port = GPIO_PORTD_BASE;
-    uint32_t pin  = GPIO_PIN_4;
-
-    int32_t s = GPIOPinRead(port, pin);
-    if( (s&pin) ==  pin)
-        return 1;
-    else
-        return 0;
-}
-
-

@@ -27,26 +27,34 @@ uint16_t servoVal[4]   = {1500,1350,680,1100};   //舵机初始化角度值
 uint8_t  servoUpdate   = 0;                             //
 uint8_t  count_enter   = 0;                             //
 
+uint8_t  f[8];
+uint8_t  b[8];
+
 uint8_t  task[3]       = {1,2,3};                       //从二维码中读取的任务信息(1:红. 2:蓝. 3:绿.)
 uint8_t  color[3]      = {3,2,1};                       //物块摆放的颜色顺序
 
 int main(void)
 {
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |  SYSCTL_XTAL_16MHZ);
-    FPUEnable();
-    FPULazyStackingEnable();
 
-    SysTick_Init_ms(20);                //初始化一个滴答定时器
-    UART2_Init(9600);                   //初始化串口2，用来与串口屏通信
-    patrol_line_init();                 //巡线端口初始化
-    key1_init();
-    car_init();
-    servo_init(servoVal);
+    SysTick_Init_ms(20);                //滴答定时器
+    UART0_Init(115200);                 //调试串口
+    UART2_Init(9600);                   //与串口屏通信
+    UART3_Init(9600);                   //前7路循迹
+    UART4_Init(9600);                   //后7路循迹
+    key1_init();                        //按键
+    car_init();                         //小车所用PWM及IO
+    servo_init(servoVal);               //舵机所用4路PWM
 
     //按下按键,开始工作
     system_waitKey();
     IntMasterEnable();
-
+    SysTickEnable();
+    while(1)
+    {
+        UARTprintf("%d%d%d%d%d%d%d%d %d%d%d%d%d%d%d%d\n",f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7]);
+        delay_ms(40);
+    }
     system_waitKey();
 
     while(1)
@@ -152,27 +160,11 @@ int main(void)
     STOP;
 }
 
+//每20ms触发一次循迹模块的采集
 void IntHandler_SysTick(void)
 {
-    static uint32_t Count_SysTick = 0;
-    Count_SysTick++;
-
-    switch(Count_SysTick)
-    {
-        case 25://0.5秒
-            Count_SysTick = 0;
-
-            count_enter = 1;
-            SysTickDisable();
-            break;
-
-        default:
-            break;
-    }
-}
-
-void IntHandler_UART1(void)
-{
+    UARTCharPut(UART3_BASE, 0x57);
+    UARTCharPut(UART4_BASE, 0x57);
 }
 
 //获得来自串口屏的信息，来手动调节舵机位置
@@ -205,3 +197,41 @@ void IntHandler_UART2(void)
         servoUpdate = 1;
     }
 }
+//获取前面循迹模块信息
+void IntHandler_UART3()
+{
+    uint32_t ui32Status = UARTIntStatus(UART3_BASE, true);
+    UARTIntClear(UART3_BASE, ui32Status);
+
+    uint8_t c=0,i=0,bit=0;
+    while(UARTCharsAvail(UART3_BASE))
+    {
+        c = UARTCharGetNonBlocking(UART3_BASE);
+        for(;i<8;i++)
+        {
+            bit = c&0x01;
+            c = c>>1;
+            f[i] = bit;
+        }
+    }
+}
+//获取后面循迹模块信息
+void IntHandler_UART4()
+{
+    uint32_t ui32Status = UARTIntStatus(UART4_BASE, true);
+    UARTIntClear(UART4_BASE, ui32Status);
+
+    uint8_t c=0,i=0,bit=0;
+    while(UARTCharsAvail(UART4_BASE))
+    {
+        c = UARTCharGetNonBlocking(UART4_BASE);
+        for(;i<8;i++)
+        {
+            bit = c&0x01;
+            c = c>>1;
+            b[i] = bit;
+        }
+    }
+}
+
+
