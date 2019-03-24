@@ -42,7 +42,6 @@ int main(void){
 
     UART0_Init(115200);                 //调试
     UART1_Init(9600);                   //openMV
-    IntDisable(INT_UART1);
     UART7_Init(9600);                   //扫码
     patrol_line_init();                 //巡线所用串口3,4 PD3
     UART2_Init(9600);                   //串口屏
@@ -92,7 +91,7 @@ int main(void){
             if(dir > 25)
                 break;
         }
-        car_back_goto_n_black_line(1, 0);
+LOOP:   car_back_goto_n_black_line(1, 0);
 
         car_forward(forward_speed);
         while(1)
@@ -103,6 +102,14 @@ int main(void){
                 car_stop();
                 break;
             }
+        }
+        if(color_get){
+            color_get = 0;
+            IntDisable(INT_UART1);
+            color_show();
+        }
+        else{
+            goto LOOP;
         }
     }
 
@@ -185,7 +192,7 @@ void IntHandler_UART1()
         temp[i] = c;
         i++;
     }
-    tmp_show(temp[0]+48,temp[1]+48,temp[2]+48);
+    color_show(temp[0]+48, temp[1]+48, temp[2]+48);
     uint8_t s0 = compare(temp,"123");
     uint8_t s1 = compare(temp,"132");
     uint8_t s2 = compare(temp,"213");
@@ -292,7 +299,7 @@ void IntHandler_UART7()
         temp[i] = c - 48;
         i++;
     }
-    tmp_show(temp[0]+48,temp[1]+48,temp[2]+48);
+    task_show(temp[0]+48,temp[1]+48,temp[2]+48);
     uint8_t s0 = compare(temp,"123");
     uint8_t s1 = compare(temp,"132");
     uint8_t s2 = compare(temp,"213");
