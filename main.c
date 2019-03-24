@@ -35,6 +35,8 @@ uint8_t  b[8];
 uint8_t  task[3]       = {2,1,3};                       //从二维码中读取的任务信息(1:红. 2:绿. 3:蓝.)
 uint8_t  color[3]      = {3,2,1};                       //物块摆放的颜色顺序
 
+uint8_t compare(uint8_t *t, char* p);
+
 int main(void){
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |  SYSCTL_XTAL_16MHZ);
 
@@ -174,16 +176,29 @@ void IntHandler_UART1()
     uint32_t ui32Status = UARTIntStatus(UART1_BASE, true);
     UARTIntClear(UART1_BASE, ui32Status);
 
-    uint8_t c = 0, i= 0;
+    uint8_t c = 0, i= 0, temp[3] = {4,4,4};;
     while(UARTCharsAvail(UART1_BASE))
     {
         c = UARTCharGetNonBlocking(UART1_BASE);
         if(i == 3)
             break;
-        color[i] = c;
+        temp[i] = c;
         i++;
     }
-    color_get = 1;
+    tmp_show(temp[0]+48,temp[1]+48,temp[2]+48);
+    uint8_t s0 = compare(temp,"123");
+    uint8_t s1 = compare(temp,"132");
+    uint8_t s2 = compare(temp,"213");
+    uint8_t s3 = compare(temp,"231");
+    uint8_t s4 = compare(temp,"321");
+    uint8_t s5 = compare(temp,"312");
+    if(s0 || s1 || s2 || s3 ||s4 || s5)
+    {
+        color[0] = temp[0];
+        color[1] = temp[1];
+        color[2] = temp[2];
+        color_get = 1;
+    }
 }
 //获得来自串口屏的信息，来调节舵机位置
 void IntHandler_UART2()
