@@ -7,7 +7,7 @@
 #include "display.h"
 
 
-void task_show()
+void task_show(void)
 {
     extern uint8_t task[3];
 
@@ -25,7 +25,7 @@ void task_show()
     UARTCharPut(UART2_BASE, 0xFF);
 }
 
-void color_show()
+void color_show(void)
 {
     extern uint8_t color[3];
 

@@ -10,8 +10,8 @@
 
 #include "uart_config.h"
 
-void task_show();
-void color_show();
+void task_show(void);
+void color_show(void);
 void tmp_show(char c0, char c1, char c2);
 
 

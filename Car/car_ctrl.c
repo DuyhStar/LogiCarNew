@@ -191,9 +191,9 @@ void car_return()
         }
     }
     car_turn_right(turn_speed);
-    delay_ms(800);
+    delay_ms(1000);
     car_back(forward_speed);
-    delay_ms(600);
+    delay_ms(800);
     car_stop();
     while(1)
     {

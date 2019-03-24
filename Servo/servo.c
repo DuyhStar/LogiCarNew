@@ -127,7 +127,7 @@ void take(uint8_t pos)
         break;
     case 3:
         //¼ÐÈ¡
-        servo_n_angle_set(0, 1190);
+        servo_n_angle_set(0, 1240);
         servo_n_angle_set(1, 860);
         servo_n_angle_set(2, 1750);
         servo_n_angle_set(3, 1730);
@@ -147,7 +147,7 @@ void place(uint8_t pos)
     {
     case 1:
         //·ÅÏÂ
-        servo_n_angle_set(0, 1940);
+        servo_n_angle_set(0, 2040);
         servo_n_angle_set(1, 2230);
         servo_n_angle_set(2, 1470);
         servo_n_angle_set(3, 1130);

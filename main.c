@@ -32,8 +32,8 @@ uint8_t  color_get     = 0;
 uint8_t  f[8];
 uint8_t  b[8];
 
-uint8_t  task[3]       = {2,1,3};                       //从二维码中读取的任务信息(1:红. 2:绿. 3:蓝.)
-uint8_t  color[3]      = {3,2,1};                       //物块摆放的颜色顺序
+uint8_t  task[3]       = {1,2,3};                       //从二维码中读取的任务信息(1:红. 2:绿. 3:蓝.)
+uint8_t  color[3]      = {1,2,3};                       //物块摆放的颜色顺序
 
 uint8_t compare(uint8_t *t, char* p);
 
@@ -55,13 +55,11 @@ int main(void){
     servo_init(servoVal);               //舵机所用4路PWM
     delay_s(3);
 
-
     car_begin_goto_first_pos();             //小车出发至第一条线，然后原地右转90°,行驶至第一个十字交叉点
     car_forward_goto_n_black_line(7, 1);    //小车巡线前行,并开始计数，行驶至二维码处
 
     //读取二维码
-    while(1)
-    {
+    while(1){
         servo_n_angle_set(0,1300);
         servo_n_angle_set(0,1700);
         if(qr_code_get){
@@ -94,15 +92,15 @@ int main(void){
 LOOP:   car_back_goto_n_black_line(1, 0);
 
         car_forward(forward_speed);
-        while(1)
-        {
+        while(1){
             forward_patrol_line(0);
-            if(f[6]||f[0])
+            if(f[6] || f[0])
             {
                 car_stop();
                 break;
             }
         }
+        //如果获取到正确的颜色顺序
         if(color_get){
             color_get = 0;
             IntDisable(INT_UART1);
@@ -113,10 +111,11 @@ LOOP:   car_back_goto_n_black_line(1, 0);
         }
     }
 
-    //夹取
+    //搬运过程
     int i = 1;
     for(;i<=3;i++){
-        take(get_take_pos(i));
+
+        take(get_take_pos(i));//抓取物块
 
         {//根据放置位置的不同行驶至不同位置
             if(task[i-1] == 2){
@@ -124,7 +123,7 @@ LOOP:   car_back_goto_n_black_line(1, 0);
                 car_back(forward_speed);
                 while(1){
                     back_patrol_line(0);
-                    if(b[6]||b[0]){
+                    if(b[6] || b[0]){
                         car_stop();
                         break;
                     }
@@ -135,25 +134,28 @@ LOOP:   car_back_goto_n_black_line(1, 0);
             }
         }
 
-        place(task[i-1]);
+        place(task[i-1]);//放置物块
 
-        //返程
-        if(i == 3)
+        //当放完第三个的时候返程
+        if(i == 3){
             car_return();
-
-        {//行驶至取物块位置
+        }
+        //否则行驶至取物块位置
+        else{
             car_forward_goto_n_black_line(1, 0);
             car_forward(forward_speed);
             while(1){
                 forward_patrol_line(0);
-                if(f[6]||f[0]){
+                if(f[6] || f[0]){
                     car_stop();
                     break;
                 }
             }
         }
     }
-    STOP
+    while(1)
+    {
+    }
 }
 
 //每20ms触发一次循迹模块的采集
@@ -192,7 +194,6 @@ void IntHandler_UART1()
         temp[i] = c;
         i++;
     }
-    color_show(temp[0]+48, temp[1]+48, temp[2]+48);
     uint8_t s0 = compare(temp,"123");
     uint8_t s1 = compare(temp,"132");
     uint8_t s2 = compare(temp,"213");
@@ -273,17 +274,6 @@ void IntHandler_UART4()
         }
     }
 }
-uint8_t compare(uint8_t *t, char* p)
-{
-    uint8_t s0 = 0,s1 = 0,s2 = 0;
-    s0 = (t[0]==(p[0]-48));
-    s1 = (t[1]==(p[1]-48));
-    s2 = (t[2]==(p[2]-48));
-    if(s0&&s1&&s2)
-        return 1;
-    else
-        return 0;
-}
 //获取扫码枪信息
 void IntHandler_UART7()
 {
@@ -299,7 +289,6 @@ void IntHandler_UART7()
         temp[i] = c - 48;
         i++;
     }
-    task_show(temp[0]+48,temp[1]+48,temp[2]+48);
     uint8_t s0 = compare(temp,"123");
     uint8_t s1 = compare(temp,"132");
     uint8_t s2 = compare(temp,"213");
@@ -314,3 +303,15 @@ void IntHandler_UART7()
         qr_code_get = 1;
     }
 }
+uint8_t compare(uint8_t *t, char* p)
+{
+    uint8_t s0 = 0,s1 = 0,s2 = 0;
+    s0 = (t[0]==(p[0]-48));
+    s1 = (t[1]==(p[1]-48));
+    s2 = (t[2]==(p[2]-48));
+    if(s0&&s1&&s2)
+        return 1;
+    else
+        return 0;
+}
+
