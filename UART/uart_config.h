@@ -23,6 +23,9 @@
 
 void UART0_Init(uint32_t Baud);
 
+void UART1_Init(uint32_t Baud);
+void IntHandler_UART1();
+
 void UART2_Init(uint32_t Baud);
 void IntHandler_UART2();
 

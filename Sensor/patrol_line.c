@@ -10,7 +10,7 @@ void patrol_line_init()
 {
     UART3_Init(9600);                   //前7路循迹
     UART4_Init(9600);                   //后7路循迹
-
+    SysTick_Init_ms(20);                //滴答定时器
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
     GPIODirModeSet(GPIO_PORTD_BASE, GPIO_PIN_3, GPIO_DIR_MODE_IN);
     GPIOPadConfigSet(GPIO_PORTD_BASE, GPIO_PIN_3, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
@@ -19,14 +19,15 @@ void patrol_line_init()
 //wide为线宽,取0,1,2
 void forward_patrol_line(uint8_t wide)
 {
-    extern int forward_speed, turn_speed, f[8];
-    int8_t left = 0, right = 0;
+    extern int forward_speed, turn_speed;
+    extern uint8_t f[8];
+    uint8_t left = 0, right = 0;
 
     switch(wide)
     {
     case 0:
         left  = f[2] || f[1] || f[0];
-        right = f[4] || f[5] || f[6];
+        right = f[5] || f[6];
         break;
     case 1:
         left  = f[1] || f[0];
@@ -53,13 +54,14 @@ void forward_patrol_line(uint8_t wide)
 
 void back_patrol_line(uint8_t wide)
 {
-    extern int forward_speed, turn_speed, b[8];
-    int8_t left = 0, right = 0;
+    extern int forward_speed, turn_speed;
+    extern uint8_t b[8];
+    uint8_t left = 0, right = 0;
 
     switch(wide)
     {
     case 0:
-        left  = b[2] || b[1] || b[0];
+        left  = b[1] || b[0];
         right = b[4] || b[5] || b[6];
         break;
     case 1:

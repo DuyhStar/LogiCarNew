@@ -18,134 +18,133 @@
 #include "car_ctrl.h"
 #include "servo.h"
 #include "delay.h"
+#include "display.h"
 
 #define STOP while(1);
 
-int      turn_speed    = 45;                            //
+int      turn_speed    = 25;                            //
 int      forward_speed = 40;                            //
-uint16_t servoVal[4]   = {1500,1350,680,1100};          //舵机初始化角度值
+uint16_t servoVal[4]   = {1500,1500,1500,1130};          //舵机初始化角度值
 uint8_t  servoUpdate   = 0;                             //
 uint8_t  count_enter   = 0;                             //
-
+uint8_t  qr_code_get   = 0;
+uint8_t  color_get     = 0;
 uint8_t  f[8];
 uint8_t  b[8];
 
-uint8_t  task[3]       = {1,2,3};                       //从二维码中读取的任务信息(1:红. 2:蓝. 3:绿.)
+uint8_t  task[3]       = {2,1,3};                       //从二维码中读取的任务信息(1:红. 2:绿. 3:蓝.)
 uint8_t  color[3]      = {3,2,1};                       //物块摆放的颜色顺序
 
-int main(void)
-{
+int main(void){
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |  SYSCTL_XTAL_16MHZ);
 
-    SysTick_Init_ms(20);                //滴答定时器
     UART0_Init(115200);                 //调试
+    UART1_Init(9600);                   //openMV
+    IntDisable(INT_UART1);
+    UART7_Init(9600);                   //扫码
+    patrol_line_init();                 //巡线所用串口3,4 PD3
     UART2_Init(9600);                   //串口屏
-    UART7_Init(9600);                   //扫码  openMV
-    patrol_line_init();                 //巡线所用两个串口及一个IO口
     key1_init();                        //按键
     car_init();                         //小车所用PWM及IO
-    servo_init(servoVal);               //舵机所用4路PWM
+    timer0_init();                      //定时器初始化,用来控制计数循迹
 
     //按下按键,开始工作
     system_waitKey();
     IntMasterEnable();
+    servo_init(servoVal);               //舵机所用4路PWM
+    delay_s(3);
 
-    //小车出发至第一条线，然后原地右转90°,行驶至第一个十字交叉点。
-    car_begin_goto_first_pos();
 
-    //小车巡线前行，并开始计数，行驶至二维码处
-    car_forward_goto_n_black_line(7);
+    car_begin_goto_first_pos();             //小车出发至第一条线，然后原地右转90°,行驶至第一个十字交叉点
+    car_forward_goto_n_black_line(7, 1);    //小车巡线前行,并开始计数，行驶至二维码处
 
-    //扫描二维码，获取任务信息
-    //TODO
-    delay_s(1);
-
-    //小车从二维码处后退，行驶至物料存放点
-    car_back(forward_speed);
-    delay_ms(500);
-    car_back_goto_n_black_line(3);
-
-    //摆正方向
-    car_turn_right_90_degree();
-
-    car_back(forward_speed);
-    delay_ms(200);
-    car_back_goto_n_black_line_inside(2);
-
-    car_forward(forward_speed);
-    delay_ms(200);
-    car_forward_goto_n_black_line_inside(2);
-    delay_s(5);
-
-    //初始化机械臂控制并设置其初始位置
-    //servo_init(servoVal);
-
-    //获取物块摆放的颜色顺序
-    //TODO
-
-    //夹取第1个物体
-    //take(1);
-
-    car_back(forward_speed);
-    delay_ms(200);
-
-    car_back_goto_n_black_line_inside(2);
-    //place(1);
-    delay_s(5);
-
-    car_forward(forward_speed);
-    delay_ms(200);
-
-    car_forward_goto_n_black_line_inside(2);
-    delay_s(5);
-
-    //夹取第2个物体
-    //take(2);
-
-    car_back(forward_speed);
-    delay_ms(200);
-
-    car_back_goto_n_black_line_inside(2);
-    //place(2);
-
-    car_forward(forward_speed);
-    delay_ms(200);
-
-    car_forward_goto_n_black_line_inside(2);
-
-    //夹取第3个物体
-    //take(3);
-
-    car_back(forward_speed);
-    delay_ms(200);
-
-    car_back_goto_n_black_line_inside(2);
-
-    //place(3);
-
-    //返程
-    car_turn_left(turn_speed);
-    delay_s(1);
-    while(1){
-        if(back_right_black()){
-            car_stop_turn_left();
+    //读取二维码
+    while(1)
+    {
+        servo_n_angle_set(0,1300);
+        servo_n_angle_set(0,1700);
+        if(qr_code_get){
+            qr_code_get = 0;
+            IntDisable(INT_UART7);
+            task_show();
+            servo_n_angle_set(0,1500);
             break;
         }
     }
-    car_back_goto_n_black_line(2);
 
-    car_turn_left(turn_speed);
-    delay_s(1);
-    while(1){
-        if(back_right_black()){
-            car_stop_turn_left();
-            break;
+    car_back_goto_n_black_line(3, 1);       //小车从二维码处后退,行驶至物料存放点
+
+    {//摆正方向, 获取物块摆放的颜色顺序
+        car_turn_right(turn_speed);
+        delay_ms(500);
+        car_turn_right(turn_speed);
+        while(!b[5])
+            ;
+        car_stop();
+
+        int dir = 0;
+        while(1){
+            back_patrol_line(0);
+            delay_ms(20);
+            dir++;
+            if(dir > 25)
+                break;
+        }
+        car_back_goto_n_black_line(1, 0);
+
+        car_forward(forward_speed);
+        while(1)
+        {
+            forward_patrol_line(0);
+            if(f[6]||f[0])
+            {
+                car_stop();
+                break;
+            }
         }
     }
-    car_back_goto_n_black_line_inside(2);
 
-    car_stop();
-    STOP;
+    //夹取
+    int i = 1;
+    for(;i<=3;i++){
+        take(get_take_pos(i));
+
+        {//根据放置位置的不同行驶至不同位置
+            if(task[i-1] == 2){
+                car_back_goto_n_black_line(1, 0);
+                car_back(forward_speed);
+                while(1){
+                    back_patrol_line(0);
+                    if(b[6]||b[0]){
+                        car_stop();
+                        break;
+                    }
+                }
+            }
+            else{
+                car_back_goto_n_black_line(2, 0);
+            }
+        }
+
+        place(task[i-1]);
+
+        //返程
+        if(i == 3)
+            car_return();
+
+        {//行驶至取物块位置
+            car_forward_goto_n_black_line(1, 0);
+            car_forward(forward_speed);
+            while(1){
+                forward_patrol_line(0);
+                if(f[6]||f[0]){
+                    car_stop();
+                    break;
+                }
+            }
+        }
+    }
+    STOP
 }
 
 //每20ms触发一次循迹模块的采集
@@ -154,9 +153,40 @@ void IntHandler_SysTick(void)
     UARTCharPut(UART3_BASE, 0x57);
     UARTCharPut(UART4_BASE, 0x57);
 }
+void Timer0IntHandler()
+{
+    TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    static uint32_t count = 0;
 
+    count++;
+
+    if(count == 6)//600ms
+    {
+        count = 0;
+
+        count_enter = 1;
+
+        TimerDisable(TIMER0_BASE, TIMER_A);
+    }
+}
+void IntHandler_UART1()
+{
+    uint32_t ui32Status = UARTIntStatus(UART1_BASE, true);
+    UARTIntClear(UART1_BASE, ui32Status);
+
+    uint8_t c = 0, i= 0;
+    while(UARTCharsAvail(UART1_BASE))
+    {
+        c = UARTCharGetNonBlocking(UART1_BASE);
+        if(i == 3)
+            break;
+        color[i] = c;
+        i++;
+    }
+    color_get = 1;
+}
 //获得来自串口屏的信息，来调节舵机位置
-void IntHandler_UART2(void)
+void IntHandler_UART2()
 {
     uint32_t ui32Status;
     ui32Status = UARTIntStatus(UART2_BASE, true);
@@ -221,15 +251,44 @@ void IntHandler_UART4()
         }
     }
 }
-//获取扫码枪信息 以及 openMV信息，公用一个串口
+uint8_t compare(uint8_t *t, char* p)
+{
+    uint8_t s0 = 0,s1 = 0,s2 = 0;
+    s0 = (t[0]==(p[0]-48));
+    s1 = (t[1]==(p[1]-48));
+    s2 = (t[2]==(p[2]-48));
+    if(s0&&s1&&s2)
+        return 1;
+    else
+        return 0;
+}
+//获取扫码枪信息
 void IntHandler_UART7()
 {
     uint32_t ui32Status = UARTIntStatus(UART7_BASE, true);
     UARTIntClear(UART7_BASE, ui32Status);
 
-    uint8_t c = 0;
+    uint8_t c = 0, i= 0, temp[3] = {4,4,4};
     while(UARTCharsAvail(UART7_BASE))
     {
         c = UARTCharGetNonBlocking(UART7_BASE);
+        if(i == 3)
+            break;
+        temp[i] = c - 48;
+        i++;
+    }
+    tmp_show(temp[0]+48,temp[1]+48,temp[2]+48);
+    uint8_t s0 = compare(temp,"123");
+    uint8_t s1 = compare(temp,"132");
+    uint8_t s2 = compare(temp,"213");
+    uint8_t s3 = compare(temp,"231");
+    uint8_t s4 = compare(temp,"321");
+    uint8_t s5 = compare(temp,"312");
+    if(s0 || s1 || s2 || s3 ||s4 || s5)
+    {
+        task[0] = temp[0];
+        task[1] = temp[1];
+        task[2] = temp[2];
+        qr_code_get = 1;
     }
 }

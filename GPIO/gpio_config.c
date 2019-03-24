@@ -30,7 +30,7 @@ void system_waitKey()
     {
         if(Key1_Read() == 1)
         {
-            delay_ms(20);
+            delay_ms(100);
             if(Key1_Read() == 1)
                 break;
         }

@@ -13,9 +13,14 @@
 #include "driverlib/systick.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/interrupt.h"
-
+#include "driverlib/timer.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_ints.h"
 void SysTick_Init_ms(uint8_t ui8IntTime);
 void IntHandler_SysTick(void);
+
+void timer0_init();
+void Timer0IntHandler();
 
 
 #endif /* TIMER_TIMER_CONFIG_H_ */

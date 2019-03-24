@@ -18,11 +18,29 @@ void UART0_Init(uint32_t Baud)
     UARTClockSourceSet(UART0_BASE, UART_CLOCK_PIOSC);//Clock 16MHz
     UARTStdioConfig(0, Baud, 16000000);
 }
+void UART1_Init(uint32_t Baud)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART1);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 
+    GPIOPinConfigure(GPIO_PB0_U1RX);
+    GPIOPinTypeUART(GPIO_PORTB_BASE, GPIO_PIN_0);
+
+    UARTConfigSetExpClk(UART1_BASE, SysCtlClockGet(), Baud, (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE));
+
+    UARTIntRegister(UART1_BASE, IntHandler_UART1);
+    UARTIntEnable(UART1_BASE, UART_INT_RX | UART_INT_RT);
+    IntEnable(INT_UART1);
+}
 void UART2_Init(uint32_t Baud)
 {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_UART2);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+
+    /* Unlock PD7 */
+    HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = 0x4C4F434B;
+    HWREG(GPIO_PORTD_BASE + GPIO_O_CR)  |= GPIO_PIN_7;
+    HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = 0x00;
 
     GPIOPinConfigure(GPIO_PD6_U2RX);
     GPIOPinConfigure(GPIO_PD7_U2TX);
@@ -85,8 +103,7 @@ void UART7_Init(uint32_t Baud)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
 
     GPIOPinConfigure(GPIO_PE0_U7RX);
-    GPIOPinConfigure(GPIO_PE1_U7TX);
-    GPIOPinTypeUART(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    GPIOPinTypeUART(GPIO_PORTE_BASE, GPIO_PIN_0);
 
     UARTConfigSetExpClk(UART7_BASE, SysCtlClockGet(), Baud, (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE));
 
