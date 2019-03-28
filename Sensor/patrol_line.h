@@ -24,6 +24,9 @@ void patrol_line_init();
 void forward_patrol_line(uint8_t wide);
 void back_patrol_line(uint8_t wide);
 
+void car_back_goto_n_black_line_right(uint8_t n, uint8_t line_wide);
+void back_patrol_line_right();
+
 uint8_t m_black();
 
 #endif /* SENSOR_PATROL_LINE_H_ */

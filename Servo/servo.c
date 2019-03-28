@@ -99,27 +99,36 @@ uint8_t get_take_pos(uint8_t n)
     }
     return i+1;
 }
+//左右移动：左加右减
 void take(uint8_t pos)
 {
+    extern int forward_speed;
     switch(pos)
     {
     case 1:
         //夹取
-        servo_n_angle_set(0, 1690);
+        servo_n_angle_set(0, 1660);
+
         servo_n_angle_set(1, 860);
         servo_n_angle_set(2, 1750);
-        servo_n_angle_set(3, 1730);
+        car_forward(40);
+        delay_ms(100);
+        car_stop();
+        servo_n_angle_set(3, 2130);
         //归位
         servo_n_angle_set(1, 1500);
         servo_n_angle_set(2, 1570);
         servo_n_angle_set(0, 1440);
         break;
     case 2:
+        car_back(40);
+        delay_ms(100);
+        car_stop();
         //夹取
         servo_n_angle_set(0, 1440);
         servo_n_angle_set(1, 860);
         servo_n_angle_set(2, 1750);
-        servo_n_angle_set(3, 1730);
+        servo_n_angle_set(3, 2130);
         //归位
         servo_n_angle_set(1, 1500);
         servo_n_angle_set(2, 1570);
@@ -127,10 +136,13 @@ void take(uint8_t pos)
         break;
     case 3:
         //夹取
-        servo_n_angle_set(0, 1240);
+        servo_n_angle_set(0, 1200);
         servo_n_angle_set(1, 860);
         servo_n_angle_set(2, 1750);
-        servo_n_angle_set(3, 1730);
+        car_forward(40);
+        delay_ms(100);
+        car_stop();
+        servo_n_angle_set(3, 2130);
         //归位
         servo_n_angle_set(1, 1500);
         servo_n_angle_set(2, 1570);
@@ -147,9 +159,9 @@ void place(uint8_t pos)
     {
     case 1:
         //放下
-        servo_n_angle_set(0, 2040);
+        servo_n_angle_set(0, 1990);
         servo_n_angle_set(1, 2230);
-        servo_n_angle_set(2, 1470);
+        servo_n_angle_set(2, 1370);
         servo_n_angle_set(3, 1130);
         //归位
         servo_n_angle_set(1, 1500);
@@ -160,7 +172,7 @@ void place(uint8_t pos)
         //放下
         servo_n_angle_set(0, 1440);
         servo_n_angle_set(1, 2230);
-        servo_n_angle_set(2, 1470);
+        servo_n_angle_set(2, 1370);
         servo_n_angle_set(3, 1130);
         //归位
         servo_n_angle_set(1, 1500);
@@ -169,9 +181,9 @@ void place(uint8_t pos)
         break;
     case 3:
         //放下
-        servo_n_angle_set(0, 940);
+        servo_n_angle_set(0, 890);
         servo_n_angle_set(1, 2230);
-        servo_n_angle_set(2, 1470);
+        servo_n_angle_set(2, 1370);
         servo_n_angle_set(3, 1130);
         //归位
         servo_n_angle_set(1, 1500);

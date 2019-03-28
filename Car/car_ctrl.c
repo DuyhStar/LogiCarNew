@@ -137,6 +137,32 @@ void car_back_goto_n_black_line(uint8_t n, uint8_t line_wide)
         }
     }
 }
+void car_back_goto_n_black_line_right(uint8_t n, uint8_t line_wide)
+{
+    extern uint8_t count_enter;//全局变量
+
+    TimerEnable(TIMER0_BASE, TIMER_A);
+    uint8_t count = 0;
+    while(1)
+    {
+        back_patrol_line_right();
+
+        //每隔500ms触发一次黑线检测
+        if(m_black()&&(count_enter == 1)){
+            count++;
+            count_enter = 0;
+            TimerEnable(TIMER0_BASE, TIMER_A);
+        }
+
+        //经过了n条黑线
+        if(count == n){
+            TimerDisable(TIMER0_BASE, TIMER_A);
+            count_enter = 0;
+            car_stop();
+            break;
+        }
+    }
+}
 
 void car_begin_goto_first_pos()
 {
@@ -192,6 +218,7 @@ void car_return()
     }
     car_turn_right(turn_speed);
     delay_ms(1000);
+    delay_ms(300);
     car_back(forward_speed);
     delay_ms(800);
     car_stop();

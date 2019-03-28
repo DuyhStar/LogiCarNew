@@ -20,11 +20,11 @@
 #include "delay.h"
 #include "display.h"
 
-#define STOP while(1);
+#define STOP while(1);  ···
 
 int      turn_speed    = 25;                            //
 int      forward_speed = 40;                            //
-uint16_t servoVal[4]   = {1500,1500,1500,1130};          //舵机初始化角度值
+uint16_t servoVal[4]   = {1500,1500,1500,1130};         //舵机初始化角度值
 uint8_t  servoUpdate   = 0;                             //
 uint8_t  count_enter   = 0;                             //
 uint8_t  qr_code_get   = 0;
@@ -90,7 +90,7 @@ int main(void){
                 break;
         }
 LOOP:   car_back_goto_n_black_line(1, 0);
-
+        delay_s(5);
         car_forward(forward_speed);
         while(1){
             forward_patrol_line(0);
@@ -118,12 +118,15 @@ LOOP:   car_back_goto_n_black_line(1, 0);
         take(get_take_pos(i));//抓取物块
 
         {//根据放置位置的不同行驶至不同位置
+            if(task[i-1] == 1){
+                car_back_goto_n_black_line_right(2, 0);
+            }
             if(task[i-1] == 2){
                 car_back_goto_n_black_line(1, 0);
                 car_back(forward_speed);
                 while(1){
                     back_patrol_line(0);
-                    if(b[6] || b[0]){
+                    if(f[6] || f[0]){
                         car_stop();
                         break;
                     }

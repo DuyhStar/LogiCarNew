@@ -9,6 +9,7 @@
 #include "pwm_config.h"
 #include "delay.h"
 #include "display.h"
+#include "car_ctrl.h"
 
 void servo_init(uint16_t *init_angle);
 void servo_pulse_set(uint8_t num, uint16_t us);

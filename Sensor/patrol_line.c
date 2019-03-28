@@ -85,7 +85,24 @@ void back_patrol_line(uint8_t wide)
     else
         car_back(forward_speed);
 }
+void back_patrol_line_right()
+{
+    extern int forward_speed, turn_speed;
+    extern uint8_t b[8];
+    uint8_t left = 0, right = 0;
 
+    left  = b[2] || b[1] || b[0];
+    right = b[5] || b[6];
+
+    if( left && right )
+        car_back(forward_speed);
+    else if(right)
+        car_turn_right(turn_speed);
+    else if(left)
+        car_turn_left(turn_speed);
+    else
+        car_back(forward_speed);
+}
 uint8_t m_black()
 {
     int32_t ui32state = GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_3);
