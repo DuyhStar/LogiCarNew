@@ -195,32 +195,47 @@ void car_return()
 {
     extern int turn_speed, forward_speed;
     extern uint8_t b[8], f[8];
+    extern uint8_t  count_enter;
     car_turn_left(turn_speed);
-    while(!(b[5]||b[6]))
+    while(!b[0])
         ;
-    car_back_goto_n_black_line(2, 1);
+    while(!b[1])
+        ;
+    while(!b[2])
+        ;
+    while(!b[3])
+        ;
+    car_back_goto_n_black_line(2, 2);
 
     car_turn_left(turn_speed);
     while(!b[0])
         ;
-    car_turn_left(turn_speed);
-    delay_ms(500);
+    while(!b[1])
+        ;
+    while(!b[2])
+        ;
+    while(!b[3])
+        ;
 
-    car_back_goto_n_black_line(2, 0);
+    car_back(forward_speed);
+    delay_ms(500);
+    car_back_goto_n_black_line(2, 1);
 
     while(1)
     {
-        back_patrol_line(0);
+        back_patrol_line(1);
         if(f[0]||f[6]){
             car_stop();
             break;
         }
     }
     car_turn_right(turn_speed);
-    delay_ms(1000);
-    delay_ms(300);
+    delay_s(1);
+    delay_ms(500);
+    delay_ms(500);
     car_back(forward_speed);
     delay_ms(800);
+    delay_ms(200);
     car_stop();
     while(1)
     {

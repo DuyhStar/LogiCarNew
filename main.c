@@ -20,9 +20,9 @@
 #include "delay.h"
 #include "display.h"
 
-#define STOP while(1);  ···
+#define STOP while(1);
 
-int      turn_speed    = 25;                            //
+int      turn_speed    = 30;                            //
 int      forward_speed = 40;                            //
 uint16_t servoVal[4]   = {1500,1500,1500,1130};         //舵机初始化角度值
 uint8_t  servoUpdate   = 0;                             //
@@ -31,11 +31,14 @@ uint8_t  qr_code_get   = 0;
 uint8_t  color_get     = 0;
 uint8_t  f[8];
 uint8_t  b[8];
+uint8_t  red_pos = 1, blue_pos = 3;
+uint8_t  exchange_cnt  = 0, exchange_ctl = 1;
 
 uint8_t  task[3]       = {1,2,3};                       //从二维码中读取的任务信息(1:红. 2:绿. 3:蓝.)
 uint8_t  color[3]      = {1,2,3};                       //物块摆放的颜色顺序
 
 uint8_t compare(uint8_t *t, char* p);
+
 
 int main(void){
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |  SYSCTL_XTAL_16MHZ);
@@ -49,14 +52,37 @@ int main(void){
     car_init();                         //小车所用PWM及IO
     timer0_init();                      //定时器初始化,用来控制计数循迹
 
+    IntMasterEnable();
+    {//调整放置的红蓝位置
+        system_waitKey();
+        TimerEnable(TIMER0_BASE, TIMER_A);
+        while(1){
+            if(exchange_cnt > 3*10)
+            {
+                exchange_ctl = 0;
+                break;
+            }
+            if(Key1_Read() == 1)
+            {
+                delay_ms(100);
+                if(Key1_Read() == 1){
+                    red_pos = 3;
+                    blue_pos = 1;
+                }
+            }
+        }
+        TimerDisable(TIMER0_BASE, TIMER_A);
+    }
+    tmp_show(red_pos+48,blue_pos+48,'!');
     //按下按键,开始工作
     system_waitKey();
-    IntMasterEnable();
-    servo_init(servoVal);               //舵机所用4路PWM
+    tmp_show(' ',' ',' ');
+    servo_init(servoVal);
     delay_s(3);
 
     car_begin_goto_first_pos();             //小车出发至第一条线，然后原地右转90°,行驶至第一个十字交叉点
-    car_forward_goto_n_black_line(7, 1);    //小车巡线前行,并开始计数，行驶至二维码处
+    car_forward_goto_n_black_line(6, 1);    //小车巡线前行,并开始计数，行驶至二维码处
+
 
     //读取二维码
     while(1){
@@ -71,13 +97,17 @@ int main(void){
         }
     }
 
-    car_back_goto_n_black_line(3, 1);       //小车从二维码处后退,行驶至物料存放点
+    car_back_goto_n_black_line(2, 2);       //小车从二维码处后退,行驶至物料存放点
 
     {//摆正方向, 获取物块摆放的颜色顺序
         car_turn_right(turn_speed);
-        delay_ms(500);
-        car_turn_right(turn_speed);
+        while(!b[6])
+            ;
         while(!b[5])
+            ;
+        while(!b[4])
+            ;
+        while(!b[3])
             ;
         car_stop();
 
@@ -90,7 +120,7 @@ int main(void){
                 break;
         }
 LOOP:   car_back_goto_n_black_line(1, 0);
-        delay_s(5);
+        delay_s(1);
         car_forward(forward_speed);
         while(1){
             forward_patrol_line(0);
@@ -121,7 +151,7 @@ LOOP:   car_back_goto_n_black_line(1, 0);
             if(task[i-1] == 1){
                 car_back_goto_n_black_line_right(2, 0);
             }
-            if(task[i-1] == 2){
+            else if(task[i-1] == 2){
                 car_back_goto_n_black_line(1, 0);
                 car_back(forward_speed);
                 while(1){
@@ -132,8 +162,11 @@ LOOP:   car_back_goto_n_black_line(1, 0);
                     }
                 }
             }
-            else{
+            else if(task[i-1] == 3){
                 car_back_goto_n_black_line(2, 0);
+            }
+            else{
+                ;
             }
         }
 
@@ -141,10 +174,19 @@ LOOP:   car_back_goto_n_black_line(1, 0);
 
         //当放完第三个的时候返程
         if(i == 3){
+            if(task[i-1] == 2){
+                car_back(forward_speed);
+                while(!m_black())
+                    ;
+            }
             car_return();
         }
         //否则行驶至取物块位置
         else{
+            if( (task[i-1] == 1) || (task[i-1] == 3) ){
+                car_forward(forward_speed);
+                delay_ms(300);
+            }
             car_forward_goto_n_black_line(1, 0);
             car_forward(forward_speed);
             while(1){
@@ -172,15 +214,19 @@ void Timer0IntHandler()
     TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     static uint32_t count = 0;
 
-    count++;
+    if(exchange_ctl == 1){
+        exchange_cnt++;
+    }
+    else{
+        count++;
+        if(count == 3)//600ms
+        {
+            count = 0;
 
-    if(count == 6)//600ms
-    {
-        count = 0;
+            count_enter = 1;
 
-        count_enter = 1;
-
-        TimerDisable(TIMER0_BASE, TIMER_A);
+            TimerDisable(TIMER0_BASE, TIMER_A);
+        }
     }
 }
 void IntHandler_UART1()

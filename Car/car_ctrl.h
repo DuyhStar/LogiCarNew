@@ -28,7 +28,9 @@ void car_speed(uint16_t speed);
 
 //前进后退n个黑线
 void car_forward_goto_n_black_line(uint8_t n, uint8_t line_wide);
+
 void car_back_goto_n_black_line(uint8_t n, uint8_t line_wide);
+void car_back_goto_n_black_line_right(uint8_t n, uint8_t line_wide);
 
 void car_begin_goto_first_pos();
 

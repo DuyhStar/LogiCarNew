@@ -12,9 +12,10 @@ void servo_init(uint16_t *init_angle)
     PWM1_3_Init();
     PWM1_4_Init();
     PWM1_5_Init();
-    int i = 0;
-    for(;i<4;i++)
-        servo_pulse_set(i, init_angle[i]);
+    servo_pulse_set(0, init_angle[0]);
+    servo_pulse_set(1, init_angle[1]);
+    servo_pulse_set(2, init_angle[2]);
+    servo_pulse_set(3, init_angle[3]);
 }
 
 void servo_pulse_set(uint8_t num, uint16_t us)
@@ -107,7 +108,7 @@ void take(uint8_t pos)
     {
     case 1:
         //夹取
-        servo_n_angle_set(0, 1660);
+        servo_n_angle_set(0, 1690);
 
         servo_n_angle_set(1, 860);
         servo_n_angle_set(2, 1750);
@@ -153,45 +154,46 @@ void take(uint8_t pos)
         break;
     }
 }
+//左加右减，0
+//上，1，2
 void place(uint8_t pos)
 {
-    switch(pos)
-    {
-    case 1:
+    extern uint8_t red_pos, blue_pos;
+
+    if(pos == red_pos){
         //放下
-        servo_n_angle_set(0, 1990);
+        servo_n_angle_set(0, 2080);
         servo_n_angle_set(1, 2230);
-        servo_n_angle_set(2, 1370);
+        servo_n_angle_set(2, 1500);
         servo_n_angle_set(3, 1130);
         //归位
         servo_n_angle_set(1, 1500);
         servo_n_angle_set(2, 1570);
         servo_n_angle_set(0, 1440);
-        break;
-    case 2:
+    }
+    else if(pos == 2){
         //放下
-        servo_n_angle_set(0, 1440);
+        servo_n_angle_set(0, 1470);
         servo_n_angle_set(1, 2230);
-        servo_n_angle_set(2, 1370);
+        servo_n_angle_set(2, 1500);
         servo_n_angle_set(3, 1130);
         //归位
         servo_n_angle_set(1, 1500);
         servo_n_angle_set(2, 1570);
         servo_n_angle_set(0, 1440);
-        break;
-    case 3:
+    }
+    else if(pos == blue_pos){
         //放下
         servo_n_angle_set(0, 890);
         servo_n_angle_set(1, 2230);
-        servo_n_angle_set(2, 1370);
+        servo_n_angle_set(2, 1500);
         servo_n_angle_set(3, 1130);
         //归位
         servo_n_angle_set(1, 1500);
         servo_n_angle_set(2, 1570);
         servo_n_angle_set(0, 1440);
-        break;
-    default:
+    }
+    else{
         tmp_show('#','#','#');
-        break;
     }
 }
